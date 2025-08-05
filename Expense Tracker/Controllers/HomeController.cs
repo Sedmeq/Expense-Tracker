@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using Expense_Tracker.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace Expense_Tracker.Controllers
 {
