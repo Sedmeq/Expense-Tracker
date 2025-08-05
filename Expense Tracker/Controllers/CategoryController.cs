@@ -1,81 +1,159 @@
 ﻿using Expense_Tracker.Data;
 using Expense_Tracker.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Expense_Tracker.Controllers
 {
     public class CategoryController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<CategoryController> _logger;
 
-        public CategoryController(ApplicationDbContext context)
+        public CategoryController(ApplicationDbContext context, ILogger<CategoryController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: Category
         public async Task<IActionResult> Index()
         {
-            return _context.Categories != null ?
-                        View(await _context.Categories.ToListAsync()) :
-                        Problem("Entity set 'ApplicationDbContext.Categories'  is null.");
+            try
+            {
+                if (_context.Categories == null)
+                {
+                    _logger.LogError("Categories DbSet is null");
+                    return Problem("Entity set 'ApplicationDbContext.Categories' is null.");
+                }
+
+                var categories = await _context.Categories
+                    .OrderBy(c => c.Type)
+                    .ThenBy(c => c.Title)
+                    .ToListAsync();
+
+                return View(categories);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while loading categories");
+                return Problem("An error occurred while loading categories.");
+            }
         }
 
-
         // GET: Category/AddOrEdit
-        public IActionResult AddOrEdit(int id = 0)
+        public async Task<IActionResult> AddOrEdit(int id = 0)
         {
-            if (id == 0)
-                return View(new Category());
-            else
-                return View(_context.Categories.Find(id));
-
+            try
+            {
+                if (id == 0)
+                {
+                    return View(new Category());
+                }
+                else
+                {
+                    var category = await _context.Categories.FindAsync(id);
+                    if (category == null)
+                    {
+                        return NotFound();
+                    }
+                    return View(category);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while loading category for editing");
+                return Problem("An error occurred while loading the category.");
+            }
         }
 
         // POST: Category/AddOrEdit
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddOrEdit([Bind("CategoryId,Title,Icon,Type")] Category category)
         {
-            if (ModelState.IsValid)
+            try
             {
-                if (category.CategoryId == 0)
-                    _context.Add(category);
-                else
-                    _context.Update(category);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(category);
-        }
+                if (ModelState.IsValid)
+                {
+                    // Check for duplicate titles
+                    var existingCategory = await _context.Categories
+                        .FirstOrDefaultAsync(c => c.Title.ToLower() == category.Title.ToLower()
+                                                 && c.CategoryId != category.CategoryId);
 
+                    if (existingCategory != null)
+                    {
+                        ModelState.AddModelError("Title", "A category with this title already exists.");
+                        return View(category);
+                    }
+
+                    if (category.CategoryId == 0)
+                    {
+                        _context.Add(category);
+                        _logger.LogInformation("Creating new category: {Title}", category.Title);
+                    }
+                    else
+                    {
+                        _context.Update(category);
+                        _logger.LogInformation("Updating category: {Title}", category.Title);
+                    }
+
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+
+                return View(category);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while saving category");
+                ModelState.AddModelError("", "An error occurred while saving the category.");
+                return View(category);
+            }
+        }
 
         // POST: Category/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Categories == null)
+            try
             {
-                return Problem("Entity set 'ApplicationDbContext.Categories'  is null.");
-            }
-            var category = await _context.Categories.FindAsync(id);
-            if (category != null)
-            {
+                if (_context.Categories == null)
+                {
+                    return Problem("Entity set 'ApplicationDbContext.Categories' is null.");
+                }
+
+                var category = await _context.Categories.FindAsync(id);
+                if (category == null)
+                {
+                    return NotFound();
+                }
+
+                // Check if category has associated transactions
+                var hasTransactions = await _context.Transactions
+                    .AnyAsync(t => t.CategoryId == id);
+
+                if (hasTransactions)
+                {
+                    TempData["ErrorMessage"] = "Cannot delete this category because it has associated transactions.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 _context.Categories.Remove(category);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Deleted category: {Title}", category.Title);
+                TempData["SuccessMessage"] = "Category deleted successfully.";
+
+                return RedirectToAction(nameof(Index));
             }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while deleting category");
+                TempData["ErrorMessage"] = "An error occurred while deleting the category.";
+                return RedirectToAction(nameof(Index));
+            }
         }
-
     }
 }
