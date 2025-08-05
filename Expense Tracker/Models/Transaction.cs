@@ -9,6 +9,7 @@ namespace Expense_Tracker.Models
         public int TransactionId { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Please select a category.")]
+        [Display(Name = "Category")]
         public int CategoryId { get; set; }
 
         [ForeignKey("CategoryId")]
@@ -26,7 +27,8 @@ namespace Expense_Tracker.Models
         [Required(ErrorMessage = "Date is required.")]
         [Display(Name = "Date")]
         [DataType(DataType.Date)]
-        public DateTime Date { get; set; } = DateTime.Today; // Use Today instead of Now for date-only
+        [CustomValidation(typeof(Transaction), nameof(ValidateDate))]
+        public DateTime Date { get; set; } = DateTime.Today;
 
         [NotMapped]
         public string? CategoryTitleWithIcon
@@ -47,6 +49,23 @@ namespace Expense_Tracker.Models
                 var prefix = Category.Type == "Expense" ? "- " : "+ ";
                 return prefix + Amount.ToString("C0");
             }
+        }
+
+        // Custom validation method for date
+        public static ValidationResult? ValidateDate(DateTime date, ValidationContext context)
+        {
+            if (date > DateTime.Today)
+            {
+                return new ValidationResult("Date cannot be in the future.");
+            }
+
+            // Optional: Prevent very old dates (more than 5 years ago)
+            if (date < DateTime.Today.AddYears(-5))
+            {
+                return new ValidationResult("Date cannot be more than 5 years ago.");
+            }
+
+            return ValidationResult.Success;
         }
     }
 }

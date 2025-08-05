@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
+
 
 namespace Expense_Tracker.Models
 {
@@ -32,6 +34,7 @@ namespace Expense_Tracker.Models
         }
 
         // Navigation property
+        [JsonIgnore]
         public virtual ICollection<Transaction>? Transactions { get; set; }
     }
 }

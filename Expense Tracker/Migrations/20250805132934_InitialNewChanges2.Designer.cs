@@ -4,6 +4,7 @@ using Expense_Tracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Expense_Tracker.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250805132934_InitialNewChanges2")]
+    partial class InitialNewChanges2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,6 +57,50 @@ namespace Expense_Tracker.Migrations
                         .HasDatabaseName("IX_Categories_Type");
 
                     b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            CategoryId = 1,
+                            Icon = "💰",
+                            Title = "Salary",
+                            Type = "Income"
+                        },
+                        new
+                        {
+                            CategoryId = 2,
+                            Icon = "💼",
+                            Title = "Freelance",
+                            Type = "Income"
+                        },
+                        new
+                        {
+                            CategoryId = 3,
+                            Icon = "🍔",
+                            Title = "Food",
+                            Type = "Expense"
+                        },
+                        new
+                        {
+                            CategoryId = 4,
+                            Icon = "🚗",
+                            Title = "Transportation",
+                            Type = "Expense"
+                        },
+                        new
+                        {
+                            CategoryId = 5,
+                            Icon = "🛍️",
+                            Title = "Shopping",
+                            Type = "Expense"
+                        },
+                        new
+                        {
+                            CategoryId = 6,
+                            Icon = "💡",
+                            Title = "Utilities",
+                            Type = "Expense"
+                        });
                 });
 
             modelBuilder.Entity("Expense_Tracker.Models.Transaction", b =>

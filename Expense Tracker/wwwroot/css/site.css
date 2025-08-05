@@ -349,3 +349,162 @@ img.profile-pic {
     .widget.chart {
         padding: 5px;
     }
+
+/* Mobile Responsive Improvements */
+
+/* Mobile First Approach */
+@media (max-width: 768px) {
+    /* Sidebar adjustments for mobile */
+    #sidebar {
+        position: fixed;
+        left: -290px;
+        transition: left 0.3s ease;
+        z-index: 1000;
+        height: 100vh;
+    }
+
+        #sidebar.e-open {
+            left: 0;
+        }
+
+    /* Main content adjustments */
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    nav.navbar {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    /* Grid adjustments for mobile */
+    .row .col-md-7 {
+        margin-bottom: 2rem;
+    }
+
+    /* Widget adjustments */
+    .widget.summary {
+        margin-bottom: 1rem;
+    }
+
+        .widget.summary > div:first-child {
+            padding: 0.75rem;
+        }
+
+    /* Chart responsive */
+    .widget.chart {
+        min-height: 300px;
+    }
+
+    /* Form adjustments */
+    .widget.p-5 {
+        padding: 1rem !important;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .main-content {
+        margin-left: 100px; /* Docked sidebar width */
+    }
+
+    nav.navbar {
+        margin-left: 100px;
+    }
+
+    #sidebar {
+        width: 100px;
+    }
+}
+
+/* Large screen adjustments */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1400px;
+    }
+}
+
+/* Print styles */
+@media print {
+    #sidebar,
+    nav.navbar,
+    .btn,
+    [class*="fa-"] {
+        display: none !important;
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .widget {
+        background-color: white !important;
+        color: black !important;
+        box-shadow: none !important;
+        border: 1px solid #ddd;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .widget {
+        border: 2px solid #fff;
+    }
+
+    .btn {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Dark theme improvements */
+@media (prefers-color-scheme: dark) {
+    /* Already implemented in main CSS */
+}
+
+/* Focus improvements for accessibility */
+*:focus {
+    outline: 2px solid #65da41;
+    outline-offset: 2px;
+}
+
+.btn:focus,
+.e-btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(101, 218, 65, 0.25);
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+    .loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid #65da41;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
+    }
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

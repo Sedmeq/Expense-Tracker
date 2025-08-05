@@ -47,60 +47,7 @@ namespace Expense_Tracker.Data
                 entity.HasIndex(e => e.Date).HasDatabaseName("IX_Transactions_Date");
                 entity.HasIndex(e => e.CategoryId).HasDatabaseName("IX_Transactions_CategoryId");
             });
-
-            // Seed initial data
-            SeedData(modelBuilder);
         }
-
-        private void SeedData(ModelBuilder modelBuilder)
-        {
-            // Seed Categories
-            modelBuilder.Entity<Category>().HasData(
-                new Category
-                {
-                    CategoryId = 1,
-                    Title = "Salary",
-                    Icon = "💰",
-                    Type = "Income"
-                },
-                new Category
-                {
-                    CategoryId = 2,
-                    Title = "Freelance",
-                    Icon = "💼",
-                    Type = "Income"
-                },
-                new Category
-                {
-                    CategoryId = 3,
-                    Title = "Food",
-                    Icon = "🍔",
-                    Type = "Expense"
-                },
-                new Category
-                {
-                    CategoryId = 4,
-                    Title = "Transportation",
-                    Icon = "🚗",
-                    Type = "Expense"
-                },
-                new Category
-                {
-                    CategoryId = 5,
-                    Title = "Shopping",
-                    Icon = "🛍️",
-                    Type = "Expense"
-                },
-                new Category
-                {
-                    CategoryId = 6,
-                    Title = "Utilities",
-                    Icon = "💡",
-                    Type = "Expense"
-                }
-            );
-        }
-
         // Override SaveChanges to add audit functionality
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

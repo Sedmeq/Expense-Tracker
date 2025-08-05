@@ -104,6 +104,7 @@ namespace Expense_Tracker.Controllers
                     }
 
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Transaction saved successfully.";
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -163,12 +164,15 @@ namespace Expense_Tracker.Controllers
                     .ThenBy(c => c.Title)
                     .ToListAsync();
 
+                // Create default category object - DÜZELTME BURADA
                 Category defaultCategory = new Category
                 {
                     CategoryId = 0,
                     Title = "Choose a Category",
-                    //TitleWithIcon = "Choose a Category"
+                    Icon = "", // Icon boş bırakıyoruz
+                    Type = "Expense" // Default type
                 };
+                // TitleWithIcon property'sine değer atamaya gerek yok çünkü computed property
 
                 categoryCollection.Insert(0, defaultCategory);
                 ViewBag.Categories = categoryCollection;

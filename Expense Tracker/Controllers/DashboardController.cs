@@ -21,6 +21,14 @@ namespace Expense_Tracker.Controllers
         {
             try
             {
+                // Check if context is available
+                if (_context?.Transactions == null || _context?.Categories == null)
+                {
+                    _logger.LogError("Database context or tables are not available");
+                    ViewBag.ErrorMessage = "Database connection issue. Please try again later.";
+                    return View();
+                }
+
                 // Last 7 Days
                 DateTime startDate = DateTime.Today.AddDays(-6);
                 DateTime endDate = DateTime.Today;
@@ -30,41 +38,47 @@ namespace Expense_Tracker.Controllers
                     .Where(y => y.Date >= startDate && y.Date <= endDate)
                     .ToListAsync();
 
-                // Calculate totals with null checking
+                // Calculate totals with improved null checking
                 int totalIncome = selectedTransactions
-                    .Where(i => i.Category != null && i.Category.Type == "Income")
+                    .Where(i => i.Category != null &&
+                               string.Equals(i.Category.Type, "Income", StringComparison.OrdinalIgnoreCase))
                     .Sum(j => j.Amount);
 
                 int totalExpense = selectedTransactions
-                    .Where(i => i.Category != null && i.Category.Type == "Expense")
+                    .Where(i => i.Category != null &&
+                               string.Equals(i.Category.Type, "Expense", StringComparison.OrdinalIgnoreCase))
                     .Sum(j => j.Amount);
 
                 int balance = totalIncome - totalExpense;
 
-                // Format currency values
-                ViewBag.TotalIncome = totalIncome.ToString("C0");
-                ViewBag.TotalExpense = totalExpense.ToString("C0");
-
+                // Format currency values safely
                 CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
                 culture.NumberFormat.CurrencyNegativePattern = 1;
-                ViewBag.Balance = String.Format(culture, "{0:C0}", balance);
 
-                // Doughnut Chart - Expense By Category
-                ViewBag.DoughnutChartData = selectedTransactions
-                    .Where(i => i.Category != null && i.Category.Type == "Expense")
+                ViewBag.TotalIncome = totalIncome.ToString("C0", culture);
+                ViewBag.TotalExpense = totalExpense.ToString("C0", culture);
+                ViewBag.Balance = balance.ToString("C0", culture);
+
+                // Doughnut Chart - Expense By Category with better error handling
+                var expenseData = selectedTransactions
+                    .Where(i => i.Category != null &&
+                               string.Equals(i.Category.Type, "Expense", StringComparison.OrdinalIgnoreCase))
                     .GroupBy(j => j.Category!.CategoryId)
                     .Select(k => new
                     {
-                        categoryTitleWithIcon = k.First().Category!.TitleWithIcon,
+                        categoryTitleWithIcon = k.First().Category?.TitleWithIcon ?? "Unknown",
                         amount = k.Sum(j => j.Amount),
-                        formattedAmount = k.Sum(j => j.Amount).ToString("C0"),
+                        formattedAmount = k.Sum(j => j.Amount).ToString("C0", culture),
                     })
                     .OrderByDescending(l => l.amount)
                     .ToList();
 
-                // Spline Chart - Income vs Expense
+                ViewBag.DoughnutChartData = expenseData;
+
+                // Spline Chart - Income vs Expense with better data handling
                 var incomeSummary = selectedTransactions
-                    .Where(i => i.Category != null && i.Category.Type == "Income")
+                    .Where(i => i.Category != null &&
+                               string.Equals(i.Category.Type, "Income", StringComparison.OrdinalIgnoreCase))
                     .GroupBy(j => j.Date)
                     .Select(k => new SplineChartData
                     {
@@ -75,7 +89,8 @@ namespace Expense_Tracker.Controllers
                     .ToList();
 
                 var expenseSummary = selectedTransactions
-                    .Where(i => i.Category != null && i.Category.Type == "Expense")
+                    .Where(i => i.Category != null &&
+                               string.Equals(i.Category.Type, "Expense", StringComparison.OrdinalIgnoreCase))
                     .GroupBy(j => j.Date)
                     .Select(k => new SplineChartData
                     {
@@ -102,20 +117,31 @@ namespace Expense_Tracker.Controllers
                                               expense = expense?.expense ?? 0,
                                           };
 
-                // Recent Transactions
-                ViewBag.RecentTransactions = await _context.Transactions
+                // Recent Transactions with safer query
+                var recentTransactions = await _context.Transactions
                     .Include(i => i.Category)
                     .OrderByDescending(j => j.Date)
                     .ThenByDescending(j => j.TransactionId)
                     .Take(5)
                     .ToListAsync();
 
+                ViewBag.RecentTransactions = recentTransactions ?? new List<Transaction>();
+
                 return View();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while loading dashboard data");
-                ViewBag.ErrorMessage = "Unable to load dashboard data. Please try again.";
+                ViewBag.ErrorMessage = "Unable to load dashboard data. Please try again later.";
+
+                // Set default values to prevent view errors
+                ViewBag.TotalIncome = "$0";
+                ViewBag.TotalExpense = "$0";
+                ViewBag.Balance = "$0";
+                ViewBag.DoughnutChartData = new List<object>();
+                ViewBag.SplineChartData = new List<object>();
+                ViewBag.RecentTransactions = new List<Transaction>();
+
                 return View();
             }
         }
