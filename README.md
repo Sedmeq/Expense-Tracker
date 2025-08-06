@@ -63,7 +63,7 @@ A modern and interactive expense tracking application built with ASP.NET Core 8.
 
 ### 1. Clone the repository
 ```bash
-git clone [your-repository-url]
+git clone https://github.com/Sedmeq/Expense-Tracker.git
 cd Expense-Tracker
 ```
 
@@ -133,15 +133,6 @@ The application works optimally on the following screen sizes:
 - **Lazy loading**: For navigation properties
 - **Async operations**: All database operations
 - **Caching**: Browser caching for static assets
-
-
-## 🎯 Future Enhancements
-
-- **Export functionality**: PDF/Excel reports
-- **Budget planning**: Monthly budget tracking
-- **Multi-currency support**: International currency handling
-- **Mobile app**: React Native or Flutter mobile version
-- **Cloud sync**: Online backup and synchronization
 
 ### Test Coverage
 - Unit tests for controllers
